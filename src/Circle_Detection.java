@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -21,15 +22,25 @@ public class Circle_Detection extends Application {
 	public void start(Stage primaryStage) {
 		try {
 			BorderPane root = new BorderPane();
-			ImageView iView = new ImageView();
+			ImageView iView1 = new ImageView();
+			ImageView iView2 = new ImageView();
+			ImageView iView3 = new ImageView();
+			ImageView iView4 = new ImageView();
 			BufferedImage unfilteredImage = loadImage();
-			iView.setImage(bufferedImgToImg(unfilteredImage));
-			root.setCenter(iView);
+			iView1.setImage(bufferedImgToImg(unfilteredImage));
+			root.setTop(iView1);
+			root.setLeft(iView2);
+			root.setRight(iView3);
+			root.setBottom(iView4);
 			Scene scene = new Scene(root,400,400);
 			
 			BufferedImage grayImage = bufferedImagetoGrayScale(unfilteredImage);
 			
-			iView.setImage(bufferedImgToImg(grayImage));
+			iView2.setImage(bufferedImgToImg(grayImage));
+			
+			BufferedImage sobelImage = applySobel(grayImage);
+			
+			iView3.setImage(bufferedImgToImg(sobelImage));
 			
 			primaryStage.setScene(scene);
 			primaryStage.show();
@@ -54,7 +65,7 @@ public class Circle_Detection extends Application {
 		try {
 		    returnImg = ImageIO.read(new File(imgDir));
 		} catch (IOException e) {
-			
+			e.printStackTrace();
 		}
 		
 		return returnImg;
@@ -70,6 +81,8 @@ public class Circle_Detection extends Application {
 	    int width = img.getWidth();
 	    int height = img.getHeight();
 
+	    BufferedImage outputImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
+	    
 	    //for each pixel of the image do 
 	    for(int y = 0; y < height; y++){
 	      for(int x = 0; x < width; x++){
@@ -78,7 +91,6 @@ public class Circle_Detection extends Application {
 
 	        //split the RGB value into the components: Alpha, Red, Green, Blue
 	        //0xAARRGGBB
-	        int a = (p>>24)&0xff;
 	        int r = (p>>16)&0xff;
 	        int g = (p>>8)&0xff;
 	        int b = p&0xff;
@@ -87,12 +99,45 @@ public class Circle_Detection extends Application {
 	        int avg = (r+g+b)/3;
 
 	        //Set the RBG to the average
-	        p = (a<<24) + (avg<<16) + (avg<<8) + avg;
-
-	        img.setRGB(x, y, p);
+	        outputImage.setRGB(x, y, (avg<<16) | (avg<<8) | avg);
 	      }
 	    }
 	    
-	    return img;
+	    return outputImage;
 	}
+	
+	private BufferedImage applySobel(BufferedImage img) {
+		
+		int width = img.getWidth();
+		int height = img.getHeight();
+		
+		BufferedImage outputImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
+		
+		for(int y = 1; y < height-1; y++) {
+			for(int x = 1; x < width-1; x++) {
+				int[][] pixelMatrix = new int[3][3];
+                pixelMatrix[0][0]=new Color(img.getRGB(x-1,y-1)).getRed();
+                pixelMatrix[0][1]=new Color(img.getRGB(x-1,y)).getRed();
+                pixelMatrix[0][2]=new Color(img.getRGB(x-1,y+1)).getRed();
+                pixelMatrix[1][0]=new Color(img.getRGB(x,y-1)).getRed();
+                pixelMatrix[1][2]=new Color(img.getRGB(x,y+1)).getRed();
+                pixelMatrix[2][0]=new Color(img.getRGB(x+1,y-1)).getRed();
+                pixelMatrix[2][1]=new Color(img.getRGB(x+1,y)).getRed();
+                pixelMatrix[2][2]=new Color(img.getRGB(x+1,y+1)).getRed();
+				
+        		int gy=(pixelMatrix[0][0]*-1)+(pixelMatrix[0][1]*-2)+(pixelMatrix[0][2]*-1)+
+        				(pixelMatrix[2][0])+(pixelMatrix[2][1]*2)+(pixelMatrix[2][2]*1);
+        		int gx=(pixelMatrix[0][0])+(pixelMatrix[0][2]*-1)+(pixelMatrix[1][0]*2)+
+        				(pixelMatrix[1][2]*-2)+(pixelMatrix[2][0])+(pixelMatrix[2][2]*-1);
+                
+                int convoResult = (int) Math.sqrt(Math.pow(gy,2)+Math.pow(gx,2));
+                
+                outputImage.setRGB(x,y,(convoResult<<16|convoResult<<8|convoResult));
+			}
+		}
+		
+		
+		return outputImage;
+	}
+	
 }
