@@ -47,6 +47,7 @@ public class Circle_Detection extends Application {
 		}
 	}
 	
+	//Load the image as a BufferedImage file
 	private BufferedImage loadImage() {
 		BufferedImage returnImg = null;
 
@@ -59,29 +60,34 @@ public class Circle_Detection extends Application {
 		return returnImg;
 	}
 	
+	//Convert a bufferedImage to a Img for viewing
 	private Image bufferedImgToImg(BufferedImage img) {
 		return SwingFXUtils.toFXImage(img, null);
 	}
 	
+	//Grayscale a buffered image
 	private BufferedImage bufferedImagetoGrayScale(BufferedImage img) { 
 	    int width = img.getWidth();
 	    int height = img.getHeight();
 
-	    //convert to grayscale
+	    //for each pixel of the image do 
 	    for(int y = 0; y < height; y++){
 	      for(int x = 0; x < width; x++){
+	    	//get the RBG value of the picture
 	        int p = img.getRGB(x,y);
 
+	        //split the RGB value into the components: Alpha, Red, Green, Blue
+	        //0xAARRGGBB
 	        int a = (p>>24)&0xff;
 	        int r = (p>>16)&0xff;
 	        int g = (p>>8)&0xff;
 	        int b = p&0xff;
 
-	        //calculate average
+	        //Average the RBG components
 	        int avg = (r+g+b)/3;
 
-	        //replace RGB value with avg
-	        p = (a<<24) | (avg<<16) | (avg<<8) | avg;
+	        //Set the RBG to the average
+	        p = (a<<24) + (avg<<16) + (avg<<8) + avg;
 
 	        img.setRGB(x, y, p);
 	      }
