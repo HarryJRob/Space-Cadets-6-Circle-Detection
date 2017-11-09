@@ -2,6 +2,8 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+
 import javax.imageio.ImageIO;
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
@@ -45,6 +47,10 @@ public class Circle_Detection extends Application {
 			
 			iView3.setImage(bufferedImgToImg(sobelImage));
 			
+			BufferedImage houghImage = applyHoughTransform(sobelImage);
+			
+			iView4.setImage(bufferedImgToImg(houghImage));
+			
 			primaryStage.setScene(scene);
 			primaryStage.show();
 		} catch(Exception e) {
@@ -58,6 +64,7 @@ public class Circle_Detection extends Application {
 			launch(args);
 		} else {
 			System.out.println("Usage: Circle_Detection <Image Directory>");
+			System.exit(0);
 		}
 	}
 	
@@ -152,7 +159,43 @@ public class Circle_Detection extends Application {
 	
 	private BufferedImage applyHoughTransform(BufferedImage img) {
 	
-		return null;
+		int width = img.getWidth();
+		int height = img.getHeight();
+		int maxRadius = 0;
+		
+		if(height/2 >= width/2) {
+			maxRadius = height/2;
+		} else {
+			maxRadius = width/2;
+		}
+		
+		BufferedImage outputImg = new BufferedImage(width,height,BufferedImage.TYPE_3BYTE_BGR);
+		int[][][] accumulator = new int[width][height][maxRadius];
+		
+		//For each pixel
+		for(int y = 1; y < height; y++ ) {
+			for(int x = 1; x < width; x++) {
+				//For each radius
+			    //System.out.println("Pixel: (" +  x + "," + y + ") out of (" + width + "," + height + ")");
+				for(int radius = 10; radius < maxRadius; radius++) {
+					//For each angle
+					for(int theta = 0; theta < 360; theta++) {
+						//Calculate the middle coordinates of the circle;
+						int a = (int) (x - radius * Math.cos(theta * Math.PI/180));
+						int b = (int) (y - radius * Math.sin(theta * Math.PI/180));
+						
+						if((a > 0 && a < width) && (b > 0 && b < height)) {
+							//System.out.println("Accumulator [" + a + "][" + b + "][" + radius + "]" );
+							accumulator[a][b][radius] += 1;
+						}
+						
+					}
+				}
+			}
+			System.out.println(y);
+		}
+
+		return outputImg;
 		
 	}
 	
