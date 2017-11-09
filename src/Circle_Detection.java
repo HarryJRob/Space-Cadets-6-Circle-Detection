@@ -2,11 +2,11 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
 import javax.imageio.ImageIO;
-
 import javafx.application.Application;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Rectangle2D;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -28,11 +28,14 @@ public class Circle_Detection extends Application {
 			ImageView iView4 = new ImageView();
 			BufferedImage unfilteredImage = loadImage();
 			iView1.setImage(bufferedImgToImg(unfilteredImage));
+			
 			root.setTop(iView1);
 			root.setLeft(iView2);
 			root.setRight(iView3);
 			root.setBottom(iView4);
-			Scene scene = new Scene(root,400,400);
+			
+			Rectangle2D psb = Screen.getPrimary().getVisualBounds();
+			Scene scene = new Scene(root,psb.getWidth(),psb.getHeight());
 			
 			BufferedImage grayImage = bufferedImagetoGrayScale(unfilteredImage);
 			
@@ -106,38 +109,51 @@ public class Circle_Detection extends Application {
 	    return outputImage;
 	}
 	
+	//Apply sobel to a BufferedImage
 	private BufferedImage applySobel(BufferedImage img) {
 		
+		//Get the width and height of the image
 		int width = img.getWidth();
 		int height = img.getHeight();
 		
+		//Create a image to output to
 		BufferedImage outputImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
 		
+		//For each pixel do
+		//This avoids the edge of the image completely.
+		//In a megapixel wide image the edge pixels make up a tiny amount of image and so can be safely ignored
 		for(int y = 1; y < height-1; y++) {
 			for(int x = 1; x < width-1; x++) {
 				int[][] pixelMatrix = new int[3][3];
-                pixelMatrix[0][0]=new Color(img.getRGB(x-1,y-1)).getRed();
-                pixelMatrix[0][1]=new Color(img.getRGB(x-1,y)).getRed();
-                pixelMatrix[0][2]=new Color(img.getRGB(x-1,y+1)).getRed();
-                pixelMatrix[1][0]=new Color(img.getRGB(x,y-1)).getRed();
-                pixelMatrix[1][2]=new Color(img.getRGB(x,y+1)).getRed();
-                pixelMatrix[2][0]=new Color(img.getRGB(x+1,y-1)).getRed();
-                pixelMatrix[2][1]=new Color(img.getRGB(x+1,y)).getRed();
-                pixelMatrix[2][2]=new Color(img.getRGB(x+1,y+1)).getRed();
+                pixelMatrix[0][0]=img.getRGB(x-1,y-1)&0xff;
+                pixelMatrix[0][1]=img.getRGB(x-1,y)&0xff;
+                pixelMatrix[0][2]=img.getRGB(x-1,y+1)&0xff;
+                
+                pixelMatrix[1][0]=img.getRGB(x,y-1)&0xff;
+                pixelMatrix[1][2]=img.getRGB(x,y+1)&0xff;
+                
+                pixelMatrix[2][0]=img.getRGB(x+1,y-1)&0xff;
+                pixelMatrix[2][1]=img.getRGB(x+1,y)&0xff;
+                pixelMatrix[2][2]=img.getRGB(x+1,y+1)&0xff;
 				
-        		int gy=(pixelMatrix[0][0]*-1)+(pixelMatrix[0][1]*-2)+(pixelMatrix[0][2]*-1)+
-        				(pixelMatrix[2][0])+(pixelMatrix[2][1]*2)+(pixelMatrix[2][2]*1);
-        		int gx=(pixelMatrix[0][0])+(pixelMatrix[0][2]*-1)+(pixelMatrix[1][0]*2)+
-        				(pixelMatrix[1][2]*-2)+(pixelMatrix[2][0])+(pixelMatrix[2][2]*-1);
+    				int gx=(pixelMatrix[0][0]*1) + (pixelMatrix[0][1]*2) + (pixelMatrix[0][2]*1)+
+    					(pixelMatrix[2][0]*-1) + (pixelMatrix[2][1]*-2) + (pixelMatrix[2][2]*-1);
                 
-                int convoResult = (int) Math.sqrt(Math.pow(gy,2)+Math.pow(gx,2));
+        			int gy=(pixelMatrix[0][0]*1) + (pixelMatrix[1][0]*2) + (pixelMatrix[2][0]*1)+
+        				(pixelMatrix[0][2]*-1) + (pixelMatrix[1][2]*-2) + (pixelMatrix[2][2]*-1);
+
+                int g = (int) Math.sqrt(Math.pow(gy,2)+Math.pow(gx,2));
                 
-                outputImage.setRGB(x,y,(convoResult<<16|convoResult<<8|convoResult));
+                outputImage.setRGB(x,y,(g<<16|g<<8|g));
 			}
 		}
-		
-		
 		return outputImage;
+	}
+	
+	private BufferedImage applyHoughTransform(BufferedImage img) {
+	
+		return null;
+		
 	}
 	
 }
