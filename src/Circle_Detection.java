@@ -4,10 +4,13 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 
 public class Circle_Detection extends Application {
 	
@@ -43,11 +46,25 @@ public class Circle_Detection extends Application {
 			
 			iView3.setImage(bufferedImgToImg(sobelImage));
 			
-			BufferedImage houghImage = imageFunc.applyHoughTransform(sobelImage, 60, 80,3);
+			BufferedImage houghImage = imageFunc.applySobelHough(grayImage, 10, 30,3);
 			
 			iView4.setImage(bufferedImgToImg(houghImage));
 			
-			primaryStage.setScene(scene);
+			iView1.setBlendMode(BlendMode.DIFFERENCE);
+
+			Group blend = new Group(
+			        iView1,
+			        iView4
+			);
+			
+	        HBox layout = new HBox(10);
+	        layout.getChildren().addAll(
+	                new ImageView(bufferedImgToImg(unfilteredImage)),
+	                blend,
+	                new ImageView(bufferedImgToImg(houghImage))
+	        );
+			
+			primaryStage.setScene(new Scene(layout));
 			primaryStage.show();
 		} catch(Exception e) {
 			e.printStackTrace();

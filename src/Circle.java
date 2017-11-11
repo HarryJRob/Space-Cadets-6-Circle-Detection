@@ -3,13 +3,11 @@ public final class Circle {
 	private int x;
 	private int y;
 	private int radius;
-	private int priority;
 
-	public Circle(int x, int y, int radius, int priority) {
+	public Circle(int x, int y, int radius) {
 		this.x = x;
 		this.y = y;
 		this.radius = radius;
-		this.priority = priority;
 	}
 	
 	public int getX() {
@@ -22,9 +20,5 @@ public final class Circle {
 	
 	public int getRadius() {
 		return radius;
-	}
-	
-	public int getPriority() {
-		return priority;
 	}
 }
