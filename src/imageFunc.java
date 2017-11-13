@@ -94,18 +94,6 @@ public abstract class imageFunc {
 	    return outputImage;
 	}
 	
-	//Loads a BufferedImage from a file directory
-	public static BufferedImage loadImage(String imgDir) throws IOException {
-		BufferedImage returnImg = null;
-		returnImg = ImageIO.read(new File(imgDir));
-		return returnImg;
-	}
-	
-	//Saves a bufferedImage to a file directory
-	public static void saveImage(String imgDir, BufferedImage img) throws IOException {
-		ImageIO.write(img, "jpg", new File(imgDir));
-	}
-	
 	//My own implementation of Sobel Operator and Hough Transform
 	public static BufferedImage applySobelHough(BufferedImage img, int minRadius, int maxRadius, int numberOfCircles) throws Exception {
 		//Get the width and height of the image
@@ -259,5 +247,17 @@ public abstract class imageFunc {
 		
 		//Finally return the image (that took a while)
 		return outputImage;
+	}
+	
+	//Loads a BufferedImage from a file directory
+	public static BufferedImage loadImage(String imgDir) throws IOException {
+		BufferedImage returnImg = null;
+		returnImg = ImageIO.read(new File(imgDir));
+		return returnImg;
+	}
+	
+	//Saves a bufferedImage to a file directory
+	public static void saveImage(String imgDir, BufferedImage img) throws IOException {
+		ImageIO.write(img, "jpg", new File(imgDir));
 	}
 }
