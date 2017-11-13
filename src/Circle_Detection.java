@@ -12,6 +12,9 @@ import javafx.scene.layout.HBox;
 public class Circle_Detection extends Application {
 	
 	private static String imgDir = "";
+	private static int minRadius = 0;
+	private static int maxRadius = 0;
+	private static int NoCircles;
 	
 	@Override
 	public void start(Stage primaryStage) {
@@ -20,19 +23,19 @@ public class Circle_Detection extends Application {
 			ImageView iView2 = new ImageView();
 			ImageView iView4 = new ImageView();
 			
-			BufferedImage unfilteredImage = imageFunc.applyGaussianBlur(imageFunc.applyGaussianBlur(imageFunc.applyGaussianBlur(imageFunc.loadImage(imgDir))));
+			BufferedImage unfilteredImage = imageFunc.loadImage(imgDir);
 			
 			iView1.setImage(bufferedImgToImg(unfilteredImage));
 			
-			BufferedImage grayImage = imageFunc.bufferedImagetoGrayScale(unfilteredImage);
+			BufferedImage grayImage = imageFunc.bufferedImagetoGrayScale(imageFunc.applyGaussianBlur(imageFunc.applyGaussianBlur(imageFunc.applyGaussianBlur(unfilteredImage))));
 			
 			iView2.setImage(bufferedImgToImg(grayImage));
 			
-			BufferedImage houghImage = imageFunc.applySobelHough(grayImage, 10, 30,3);
+			BufferedImage houghImage = imageFunc.applySobelHough(grayImage, minRadius, maxRadius, NoCircles);
 			
 			iView4.setImage(bufferedImgToImg(houghImage));
 			
-			iView1.setBlendMode(BlendMode.DIFFERENCE);
+			iView4.setBlendMode(BlendMode.DIFFERENCE);
 
 			Group blend = new Group(
 			        iView1,
@@ -54,11 +57,14 @@ public class Circle_Detection extends Application {
 	}
 	
 	public static void main(String[] args) {
-		if (args.length == 1) {
+		if (args.length == 4) {
 			imgDir = args[0];
+			minRadius = Integer.parseInt(args[1]);
+			maxRadius = Integer.parseInt(args[2]);
+			NoCircles = Integer.parseInt(args[3]);
 			launch(args);
 		} else {
-			System.out.println("Usage: Circle_Detection <Image Directory>");
+			System.out.println("Usage: Circle_Detection <Image Directory> <Minimum Radius> <Maximum Radius> <No. of Circles>");
 			System.exit(0);
 		}
 	}

@@ -12,7 +12,7 @@ public abstract class imageFunc {
 	//			Public Functions
 	
 	
-	//Apply a gaussian blur to a image
+	//Apply a Gaussian blur to a image
 	public static BufferedImage applyGaussianBlur(BufferedImage img) {
 		BufferedImage outputImage = new BufferedImage(img.getWidth(),img.getHeight(),BufferedImage.TYPE_3BYTE_BGR);
 		
