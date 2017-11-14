@@ -165,6 +165,7 @@ public abstract class imageFunc {
 					for(int y = 0; y < height; y++) {
 						//If the intensity is above average
 						if(sobelOutput[x][y][0] > averageEdge) {
+							//Not yet implemented
 							//Using the angle calculated by the sobel operator find the points which could be the centre of a circle
 							for(int theta = 0; theta < 360; theta++) {
 								//Calculate the middle coordinates of the circle and add them to the accumulator
