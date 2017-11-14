@@ -20,7 +20,6 @@ public class Circle_Detection extends Application {
 	public void start(Stage primaryStage) {
 		try {
 			ImageView iView1 = new ImageView();
-			ImageView iView2 = new ImageView();
 			ImageView iView4 = new ImageView();
 			
 			BufferedImage unfilteredImage = imageFunc.loadImage(imgDir);
@@ -28,8 +27,6 @@ public class Circle_Detection extends Application {
 			iView1.setImage(bufferedImgToImg(unfilteredImage));
 			
 			BufferedImage grayImage = imageFunc.bufferedImagetoGrayScale(imageFunc.applyGaussianBlur(imageFunc.applyGaussianBlur(imageFunc.applyGaussianBlur(unfilteredImage))));
-			
-			iView2.setImage(bufferedImgToImg(grayImage));
 			
 			BufferedImage houghImage = imageFunc.applySobelHough(grayImage, minRadius, maxRadius, NoCircles);
 			
