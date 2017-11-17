@@ -1,9 +1,7 @@
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
-
 import javax.imageio.ImageIO;
 
 public abstract class imageFunc {
@@ -27,30 +25,26 @@ public abstract class imageFunc {
 						1 2 1  
 					 */
 					
-					Color[][] pixelMatrix = new Color[3][3];
-	                pixelMatrix[0][0]=new Color(img.getRGB(x-1,y-1));
-	                pixelMatrix[0][1]=new Color(img.getRGB(x-1,y));
-	                pixelMatrix[0][2]=new Color(img.getRGB(x-1,y+1));
-	                
-	                pixelMatrix[1][0]=new Color(img.getRGB(x,y-1));
-	                pixelMatrix[1][1]=new Color(img.getRGB(x,y));
-	                pixelMatrix[1][2]=new Color(img.getRGB(x,y+1));
-	                
-	                pixelMatrix[2][0]=new Color(img.getRGB(x+1,y-1));
-	                pixelMatrix[2][1]=new Color(img.getRGB(x+1,y));
-	                pixelMatrix[2][2]=new Color(img.getRGB(x+1,y+1));
-	                
-	                int red = (pixelMatrix[0][0].getRed()) + (pixelMatrix[0][1].getRed()*2) + (pixelMatrix[0][2].getRed()) +
-	                		(pixelMatrix[1][0].getRed()*2) + (pixelMatrix[1][1].getRed()*4) + (pixelMatrix[1][2].getRed()*2) +
-	                		(pixelMatrix[2][0].getRed()) + (pixelMatrix[2][1].getRed()*2) + (pixelMatrix[2][2].getRed());
-	                
-	                int green = (pixelMatrix[0][0].getGreen()) + (pixelMatrix[0][1].getGreen()*2) + (pixelMatrix[0][2].getGreen()) +
-	                		(pixelMatrix[1][0].getGreen()*2) + (pixelMatrix[1][1].getGreen()*4) + (pixelMatrix[1][2].getGreen()*2) +
-	                		(pixelMatrix[2][0].getGreen()) + (pixelMatrix[2][1].getGreen()*2) + (pixelMatrix[2][2].getGreen());
-	                
-	                int blue = (pixelMatrix[0][0].getBlue()) + (pixelMatrix[0][1].getBlue()*2) + (pixelMatrix[0][2].getBlue()) +
-	                		(pixelMatrix[1][0].getBlue()*2) + (pixelMatrix[1][1].getBlue()*4) + (pixelMatrix[1][2].getBlue()*2) +
-	                		(pixelMatrix[2][0].getBlue()) + (pixelMatrix[2][1].getBlue()*2) + (pixelMatrix[2][2].getBlue());
+					int[][] blurMatrix = new int[][] {{1,2,1},{2,4,2},{1,2,1}};
+					
+					int[][] redMatrix = new int[][] {
+						{img.getRGB(x-1,y-1)>>16&0xff,img.getRGB(x,y-1)>>16&0xff,img.getRGB(x+1,y-1)>>16&0xff},
+						{img.getRGB(x-1,y)>>16&0xff,img.getRGB(x,y)>>16&0xff,img.getRGB(x+1,y)>>16&0xff},
+						{img.getRGB(x-1,y+1)>>16&0xff,img.getRGB(x,y+1)>>16&0xff,img.getRGB(x+1,y+1)>>16&0xff}};
+					
+					int[][] greenMatrix = new int[][] {
+						{img.getRGB(x-1,y-1)>>8&0xff,img.getRGB(x,y-1)>>8&0xff,img.getRGB(x+1,y-1)>>8&0xff},
+						{img.getRGB(x-1,y)>>8&0xff,img.getRGB(x,y)>>8&0xff,img.getRGB(x+1,y)>>8&0xff},
+						{img.getRGB(x-1,y+1)>>8&0xff,img.getRGB(x,y+1)>>8&0xff,img.getRGB(x+1,y+1)>>8&0xff}};	
+						
+					int[][] blueMatrix = new int[][] {
+						{img.getRGB(x-1,y-1)&0xff,img.getRGB(x,y-1)&0xff,img.getRGB(x+1,y-1)&0xff},
+						{img.getRGB(x-1,y)&0xff,img.getRGB(x,y)&0xff,img.getRGB(x+1,y)&0xff},
+						{img.getRGB(x-1,y+1)&0xff,img.getRGB(x,y+1)&0xff,img.getRGB(x+1,y+1)&0xff}};	
+						
+					int red = matrixConvolve(blurMatrix,redMatrix);
+					int green = matrixConvolve(blurMatrix,greenMatrix);
+					int blue = matrixConvolve(blurMatrix,blueMatrix);
 	
 	                red /= 16;
 	                green /= 16;
@@ -99,9 +93,10 @@ public abstract class imageFunc {
 		//Get the width and height of the image
 		int width = img.getWidth();
 		int height = img.getHeight();
+		double averageEdge = 0;
 		
 		//The first z contains the color of the edge and the second contains the angle
-		int[][][] sobelOutput = new int[width][height][2];
+		double[][][] sobelOutput = new double[width][height][2];
 				
 		{
 			//For each pixel do
@@ -109,52 +104,42 @@ public abstract class imageFunc {
 			//In a megapixel wide image the edge pixels make up a tiny amount of image and so can be safely ignored
 			for(int y = 1; y < height-1; y++) {
 				for(int x = 1; x < width-1; x++) {
-				int[][] pixelMatrix = new int[3][3];
-			    pixelMatrix[0][0]=img.getRGB(x-1,y-1)&0xff;
-			    pixelMatrix[0][1]=img.getRGB(x-1,y)&0xff;
-			    pixelMatrix[0][2]=img.getRGB(x-1,y+1)&0xff;
-			                
-			    pixelMatrix[1][0]=img.getRGB(x,y-1)&0xff;
-			    pixelMatrix[1][2]=img.getRGB(x,y+1)&0xff;
-			                
-                pixelMatrix[2][0]=img.getRGB(x+1,y-1)&0xff;
-                pixelMatrix[2][1]=img.getRGB(x+1,y)&0xff;
-                pixelMatrix[2][2]=img.getRGB(x+1,y+1)&0xff;
+					int[][]	gxMatrix = new int[][] {
+						{1,0,-1},
+						{2,0,-2},
+						{1,0,-1}};
+					
+					int[][] gyMatrix = new int[][] {
+						{1 , 2, 1},
+						{0 , 0, 0},
+						{-1,-2,-1}};	
+						
+					int[][] pixelMatrix = new int[][] {
+						{img.getRGB(x-1,y-1)&0xff,img.getRGB(x-1,y)&0xff,img.getRGB(x-1,y+1)&0xff},
+						{img.getRGB(x,y-1)&0xff,img.getRGB(x,y)&0xff,img.getRGB(x,y+1)&0xff},
+						{img.getRGB(x+1,y+1)&0xff,img.getRGB(x+1,y)&0xff,img.getRGB(x+1,y+1)&0xff}};
 				
-    			int gx=(pixelMatrix[0][0]*1) + (pixelMatrix[0][1]*2) + (pixelMatrix[0][2]*1)+
-    					(pixelMatrix[2][0]*-1) + (pixelMatrix[2][1]*-2) + (pixelMatrix[2][2]*-1);
+					int gx = matrixConvolve(gxMatrix,pixelMatrix);
                 
-        		int gy=(pixelMatrix[0][0]*1) + (pixelMatrix[1][0]*2) + (pixelMatrix[2][0]*1)+
-        				(pixelMatrix[0][2]*-1) + (pixelMatrix[1][2]*-2) + (pixelMatrix[2][2]*-1);
+					int gy = matrixConvolve(gyMatrix,pixelMatrix);
 
-                int g = (int) Math.sqrt(Math.pow(gy,2)+Math.pow(gx,2));
-                int gTheta = 0;
+					double g = Math.sqrt(Math.pow(gy,2)+Math.pow(gx,2));
+					double gTheta = 0;
                 
-                if(gy != 0) 
-                	gTheta = (int) Math.atan(gx/gy);
+					if(gy != 0) 
+						gTheta = Math.atan(gx/gy);
 
-                
-                sobelOutput[x][y][0] = g;
-                sobelOutput[x][y][1] = gTheta;
+					averageEdge += g;
+					sobelOutput[x][y][0] = g;
+					sobelOutput[x][y][1] = gTheta;
 				}
 			}
 		}
 		
 		//Calculate the average value for a edge (this just clears up the image)
-		int averageEdge = 0;
+		averageEdge /= width*height;
 		
-		{
-			for(int x = 0; x < width; x++) {
-				for(int y = 0; y < height; y++) {
-					averageEdge += sobelOutput[x][y][0];
-				}
-			}
-			
-			averageEdge /= width*height;
-		}
-		
-		int[][] centerVoteMatrix = new int[width][height];
-		int[][][] radiusVoteMatrix = new int[width][height][maxRadius];
+		int[][][] voteMatrix = new int[width][height][maxRadius];
 		
 		{
 			
@@ -166,19 +151,19 @@ public abstract class imageFunc {
 						//If the intensity is above average
 						if(sobelOutput[x][y][0] > averageEdge) {
 							//Not yet implemented
-							//Using the angle calculated by the sobel operator find the points which could be the centre of a circle
-							for(int theta = 0; theta < 360; theta++) {
-								//Calculate the middle coordinates of the circle and add them to the accumulator
-								int a = (int) (x - r * Math.cos(theta * Math.PI/180));
-								int b = (int) (y - r * Math.sin(theta * Math.PI/180));
-									
-								if((a >= 0 && a < width) && (b >= 0 && b < height)) {
-									centerVoteMatrix[a][b] += 1;
-									radiusVoteMatrix[a][b][r] +=1;
-								}
+							//Using the angle calculated by the sobel operator find the points which could be the center of a circle
+							int a = (int) (x - r * Math.cos(sobelOutput[x][y][1]));
+							int b = (int) (y - r * Math.sin(sobelOutput[x][y][1]));
+							int c = (int) (x - r * Math.cos(sobelOutput[x][y][1] + Math.PI));
+							int d = (int) (y - r * Math.sin(sobelOutput[x][y][1] + Math.PI));
 								
+							if((a >= 0 && a < width) && (b >= 0 && b < height)) {
+								voteMatrix[a][b][r] += 1;
 							}
-						
+							
+							if((c >= 0 && c < width) && (d >= 0 && d < height)) {
+								voteMatrix[c][d][r] += 1;
+							}
 						}
 					}
 				}
@@ -187,50 +172,28 @@ public abstract class imageFunc {
 		
 		//Find the largest value in the array until u run out of circles to find 
 		//Upon finding a circle half the Vote values of the surrounding values in a square of edge length radius/4
-		LinkedList<Circle> circleList = new LinkedList<Circle>();
+		LinkedList<Circle> circleList =  new LinkedList<Circle>();
 		
 		{
-			for(int circleNum = 0; circleNum < numberOfCircles; circleNum++) {
+			for(int r = minRadius; r < maxRadius; r++) {
 				//Find highest vote
-				int curHighestVote = -1;
-				int curHighestX = -1;
-				int curHighestY = -1;
+				int highestVote = -1;
+				int highestVoteX = -1;
+				int highestVoteY = -1;
 				for(int x = 0; x < width; x++) {
 					for(int y = 0; y < height; y++) {
-						if(centerVoteMatrix[x][y] > curHighestVote) {
-							curHighestVote = centerVoteMatrix[x][y];
-							curHighestX = x;
-							curHighestY = y;
+						if(voteMatrix[x][y][r] > highestVote) {
+							highestVote = voteMatrix[x][y][r];
+							highestVoteX = x;
+							highestVoteY = y;
 						}
 					}
 				}
 				
-				//Find highest radius vote for the highest vote
-				int highestRadius = -1;
-				int radiusVote = -1;
-				for(int r = minRadius; r < maxRadius; r++) {
-					if(radiusVoteMatrix[curHighestX][curHighestY][r] > radiusVote) {
-						highestRadius = r;
-						radiusVote = radiusVoteMatrix[curHighestX][curHighestY][r]; 
-					}
-				}
-				System.out.println("Found most likely circle: (" + curHighestX + " , " + curHighestY + ") of radius " + highestRadius);
-				
-				//Half the nearby vote values so that it isn't detected again unless it was incredibly popular for a different radius
-				for(int x = 0; x < width; x++) {
-					for(int y = 0; y < height; y++) {
-						if(x > curHighestX - highestRadius/2 && x < curHighestX + highestRadius/2 && y > curHighestY - highestRadius/2 && y < curHighestY + highestRadius/2) {
-							centerVoteMatrix[x][y] /= 2;
-							radiusVoteMatrix[x][y][highestRadius] /= 2;
-						}
-					}
-				}
-				
-				//Now store this circle for drawing later
-				circleList.add(new Circle(curHighestX,curHighestY,highestRadius));
+				circleList.add(new Circle(highestVoteX, highestVoteY, r));
 			}
 		}
-
+		
 		//Now to draw stuff
 		BufferedImage outputImage = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB);
 		
@@ -248,6 +211,23 @@ public abstract class imageFunc {
 		
 		//Finally return the image (that took a while)
 		return outputImage;
+	}
+
+	private static int matrixConvolve(int[][] weightMatrix, int[][] matrixToConvolve) {
+		
+		if(weightMatrix.length == matrixToConvolve.length && weightMatrix[0].length == matrixToConvolve[0].length) {
+			int width = weightMatrix[0].length;
+			int height = weightMatrix.length;
+			int total = 0;
+			for(int x = 0; x < width; x++) {
+				for(int y = 0;y < height; y++) {
+					total += weightMatrix[x][y] * matrixToConvolve[x][y];
+				}
+			}
+			return total;
+		}
+		
+		return 0;
 	}
 	
 	//Loads a BufferedImage from a file directory
